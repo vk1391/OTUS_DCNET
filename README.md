@@ -193,3 +193,220 @@ traceroute to 2.2.2.2 (2.2.2.2), 30 hops max, 60 byte packets
  1  10.1.11.2 (10.1.11.2)  21.543 ms  29.202 ms  30.489 ms
  2  2.2.2.2 (2.2.2.2)  61.298 ms  62.389 ms  73.012 ms
 ```
+
+# Построение Underlay сети(ISIS) 
+## Задание:
+- Настроите ISIS в Underlay сети, для IP связанности между всеми сетевыми устройствами.
+- Зафиксируете в документации - план работы, адресное пространство, схему сети, конфигурацию устройств
+- Убедитесь в наличии IP связанности между устройствами в ISIS домене
+![alt-dtp](https://github.com/vk1391/OTUS_DCNET/blob/main/isis.png)
+###  Настроите ISIS в Underlay сети, для IP связанности между всеми сетевыми устройствами.
+- конфигурация isis spine1:
+```
+localhost#sh run | sec isis
+interface Ethernet1
+   isis enable s1
+   isis circuit-type level-2
+   isis network point-to-point
+interface Ethernet2
+   isis enable s1
+   isis circuit-type level-2
+   isis network point-to-point
+interface Ethernet3
+   isis enable s1
+   isis circuit-type level-2
+   isis network point-to-point
+interface Loopback0
+   isis enable s1
+interface Loopback1
+   isis enable s1
+router isis s1
+   net 49.0001.0001.0001.0001.00
+   is-hostname s1
+   router-id ipv4 1.1.1.1
+   !
+   address-family ipv4 unicast
+      bfd all-interfaces
+```
+- конфигурация isis spine2:
+```
+localhost(config-router-isis)#sh run | sec isis
+interface Ethernet1
+   isis enable s2
+   isis circuit-type level-2
+   isis network point-to-point
+interface Ethernet2
+   isis enable s2
+   isis circuit-type level-2
+   isis network point-to-point
+interface Ethernet3
+   isis enable s2
+   isis circuit-type level-2
+   isis network point-to-point
+interface Loopback0
+   isis enable s2
+interface Loopback1
+   isis enable s2
+router isis s2
+   net 49.0002.0000.0000.0000.0002.00
+   is-hostname s2
+   !
+   address-family ipv4 unicast
+      bfd all-interfaces
+```
+- конфигурация isis leaf1:
+```
+localhost(config-router-isis)#sh run | sec isis
+interface Ethernet1
+   isis enable l1
+   isis circuit-type level-2
+   isis network point-to-point
+interface Ethernet2
+   isis enable l1
+   isis circuit-type level-2
+   isis network point-to-point
+interface Loopback0
+   isis enable l1
+interface Loopback1
+   isis enable l1
+router isis l1
+   net 49.0022.0022.0022.0022.00
+   is-hostname l1
+   router-id ipv4 11.11.11.11
+   is-type level-2
+   !
+   address-family ipv4 unicast
+      bfd all-interfaces
+```
+- конфигурация isis leaf2:
+```
+localhost(config-router-isis)#sh run | sec isis
+interface Ethernet1
+   isis enable l2
+   isis circuit-type level-2
+   isis network point-to-point
+interface Ethernet2
+   isis enable l2
+   isis circuit-type level-2
+   isis network point-to-point
+interface Loopback0
+   isis enable l2
+interface Loopback1
+   isis enable l2
+router isis l2
+   net 49.0022.0000.0000.0000.0022.00
+   is-hostname l2
+   is-type level-2
+   !
+   address-family ipv4 unicast
+      bfd all-interfaces
+```
+- конфигурация isis leaf3:
+```
+localhost(config-router-isis)#sh run | sec isis
+interface Ethernet1
+   isis enable l3
+   isis circuit-type level-2
+   isis network point-to-point
+interface Ethernet2
+   isis enable l3
+   isis circuit-type level-2
+   isis network point-to-point
+interface Loopback0
+   isis enable l3
+interface Loopback1
+   isis enable l3
+router isis l3
+   net 49.0033.0000.0000.0000.0033.00
+   is-hostname l3
+   is-type level-2
+   !
+   address-family ipv4 unicast
+```
+### Убедитесь в наличии IP связанности между устройствами в ISIS домене
+- таблица соседства spine1:
+```
+localhost#sh isis neighbors 
+ 
+Instance  VRF      System Id        Type Interface          SNPA              State Hold time   Circuit Id          
+s1        default  l2               L2   Ethernet2          P2P               UP    24          0D                  
+s1        default  l3               L2   Ethernet3          P2P               UP    29          0D                  
+s1        default  l1               L2   Ethernet1          P2P               UP    26          0F
+```
+- таблица соседства spine2:
+```
+localhost#sh isis neighbors 
+ 
+Instance  VRF      System Id        Type Interface          SNPA              State Hold time   Circuit Id          
+s2        default  l2               L2   Ethernet2          P2P               UP    29          0E                  
+s2        default  l3               L2   Ethernet3          P2P               UP    29          0E                  
+s2        default  l1               L2   Ethernet1          P2P               UP    26          10
+```
+- таблица маршрутизации spine1:
+```
+Gateway of last resort is not set
+
+ C        1.1.1.1/32 is directly connected, Loopback0
+ I L2     2.2.2.2/32 [115/30] via 10.1.11.2, Ethernet1
+                              via 10.1.12.2, Ethernet2
+                              via 10.1.13.2, Ethernet3
+ C        10.1.11.0/30 is directly connected, Ethernet1
+ C        10.1.12.0/30 is directly connected, Ethernet2
+ C        10.1.13.0/30 is directly connected, Ethernet3
+ I L2     10.2.11.0/30 [115/20] via 10.1.11.2, Ethernet1
+ I L2     10.2.12.0/30 [115/20] via 10.1.12.2, Ethernet2
+ I L2     10.2.13.0/30 [115/20] via 10.1.13.2, Ethernet3
+ I L2     11.11.11.11/32 [115/20] via 10.1.11.2, Ethernet1
+ I L2     12.12.12.12/32 [115/20] via 10.1.12.2, Ethernet2
+ I L2     13.13.13.13/32 [115/20] via 10.1.13.2, Ethernet3
+ C        101.1.1.1/32 is directly connected, Loopback1
+ I L2     101.2.2.2/32 [115/30] via 10.1.11.2, Ethernet1
+                                via 10.1.12.2, Ethernet2
+                                via 10.1.13.2, Ethernet3
+ I L2     101.11.11.11/32 [115/20] via 10.1.11.2, Ethernet1
+ I L2     101.12.12.12/32 [115/20] via 10.1.12.2, Ethernet2
+ I L2     101.13.13.13/32 [115/20] via 10.1.13.2, Ethernet3
+```
+- таблица маршрутизации spine2:
+```
+Gateway of last resort is not set
+
+ I L2     1.1.1.1/32 [115/30] via 10.2.11.2, Ethernet1
+                              via 10.2.12.2, Ethernet2
+                              via 10.2.13.2, Ethernet3
+ C        2.2.2.2/32 is directly connected, Loopback0
+ I L2     10.1.11.0/30 [115/20] via 10.2.11.2, Ethernet1
+ I L2     10.1.12.0/30 [115/20] via 10.2.12.2, Ethernet2
+ I L2     10.1.13.0/30 [115/20] via 10.2.13.2, Ethernet3
+ C        10.2.11.0/30 is directly connected, Ethernet1
+ C        10.2.12.0/30 is directly connected, Ethernet2
+ C        10.2.13.0/30 is directly connected, Ethernet3
+ I L2     11.11.11.11/32 [115/20] via 10.2.11.2, Ethernet1
+ I L2     12.12.12.12/32 [115/20] via 10.2.12.2, Ethernet2
+ I L2     13.13.13.13/32 [115/20] via 10.2.13.2, Ethernet3
+ I L2     101.1.1.1/32 [115/30] via 10.2.11.2, Ethernet1
+                                via 10.2.12.2, Ethernet2
+                                via 10.2.13.2, Ethernet3
+ C        101.2.2.2/32 is directly connected, Loopback1
+ I L2     101.11.11.11/32 [115/20] via 10.2.11.2, Ethernet1
+ I L2     101.12.12.12/32 [115/20] via 10.2.12.2, Ethernet2
+ I L2     101.13.13.13/32 [115/20] via 10.2.13.2, Ethernet3
+```
+- ping lo0 spine1 - lo0 spine2:
+```
+localhost#ping 2.2.2.2
+PING 2.2.2.2 (2.2.2.2) 72(100) bytes of data.
+80 bytes from 2.2.2.2: icmp_seq=1 ttl=63 time=22.7 ms
+80 bytes from 2.2.2.2: icmp_seq=2 ttl=63 time=18.1 ms
+80 bytes from 2.2.2.2: icmp_seq=3 ttl=63 time=15.9 ms
+80 bytes from 2.2.2.2: icmp_seq=4 ttl=63 time=14.6 ms
+80 bytes from 2.2.2.2: icmp_seq=5 ttl=63 time=17.8 ms
+
+--- 2.2.2.2 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 78ms
+rtt min/avg/max/mdev = 14.648/17.874/22.735/2.749 ms, pipe 2, ipg/ewma 19.731/20.212 ms
+localhost#traceroute 2.2.2.2
+traceroute to 2.2.2.2 (2.2.2.2), 30 hops max, 60 byte packets
+ 1  10.1.11.2 (10.1.11.2)  15.962 ms  26.506 ms  26.858 ms
+ 2  2.2.2.2 (2.2.2.2)  47.047 ms  51.166 ms  58.808 ms
+```
