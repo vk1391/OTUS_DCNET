@@ -410,3 +410,69 @@ traceroute to 2.2.2.2 (2.2.2.2), 30 hops max, 60 byte packets
  1  10.1.11.2 (10.1.11.2)  15.962 ms  26.506 ms  26.858 ms
  2  2.2.2.2 (2.2.2.2)  47.047 ms  51.166 ms  58.808 ms
 ```
+# Построение Underlay сети(eBGP)
+## Задание
+ - Настроите BGP в Underlay сети, для IP связанности между всеми сетевыми устройствами. iBGP или eBGP - решать вам!
+ - Зафиксируете в документации - план работы, адресное пространство, схему сети, конфигурацию устройств
+ - Убедитесь в наличии IP связанности между устройствами в BGP домене
+![alt-dtp](https://github.com/vk1391/OTUS_DCNET/blob/main/bgp.png)
+### Настроите iBGP в Underlay сети, для IP связанности между всеми сетевыми устройствами
+- конфигурация ibgp spine1:
+```
+localhost#sh run | sec bgp
+router bgp 101
+   router-id 1.1.1.1
+   timers bgp 3 9
+   neighbor underlay peer group
+   neighbor underlay remote-as 101
+   neighbor underlay next-hop-self
+   neighbor underlay bfd
+   neighbor underlay route-reflector-client
+   neighbor 10.1.11.2 peer group underlay
+   neighbor 10.1.12.2 peer group underlay
+   neighbor 10.1.13.2 peer group underlay
+   redistribute connected route-map redist
+localhost(config-router-bgp)#sh run | sec route-map
+route-map redist permit 10
+   match interface Loopback0
+```
+- конфигурация ibgp spine2:
+```
+localhost(config-router-bgp)#sh run | sec bgp
+router bgp 101
+   router-id 2.2.2.2
+   timers bgp 3 9
+   neighbor underlay peer group
+   neighbor underlay remote-as 101
+   neighbor underlay next-hop-self
+   neighbor underlay bfd
+   neighbor 10.2.11.2 peer group underlay
+   neighbor 10.2.12.2 peer group underlay
+   neighbor 10.2.13.2 peer group underlay
+   redistribute connected route-map redist
+localhost(config-router-bgp)#sh run | sec route-map
+route-map redist permit 10
+   match interface Loopback0
+```
+- конфигурация ibgp leaf1:
+```
+localhost(config-router-bgp)#sh run | sec bgp
+router bgp 101
+   router-id 11.11.11.11
+   timers bgp 3 9
+   maximum-paths 2
+   neighbor 10.1.11.1 remote-as 101
+   neighbor 10.1.11.1 next-hop-self
+   neighbor 10.1.11.1 bfd
+   neighbor 10.2.11.1 remote-as 101
+   neighbor 10.2.11.1 next-hop-self
+   neighbor 10.2.11.1 bfd
+   redistribute connected route-map redist
+localhost(config-router-bgp)#sh run | sec route-map
+route-map redist permit 10
+   match interface Loopback0
+```
+- конфигурация ibgp leaf2:
+```
+
+
