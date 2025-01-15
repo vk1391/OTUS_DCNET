@@ -199,7 +199,7 @@ traceroute to 2.2.2.2 (2.2.2.2), 30 hops max, 60 byte packets
 - Настроите ISIS в Underlay сети, для IP связанности между всеми сетевыми устройствами.
 - Зафиксируете в документации - план работы, адресное пространство, схему сети, конфигурацию устройств
 - Убедитесь в наличии IP связанности между устройствами в ISIS домене
-![alt-dtp](https://github.com/vk1391/OTUS_DCNET/blob/main/isis.png)
+![alt-dtp](https://github.com/vk1391/OTUS_DCNET/blob/main/isis.jpg)
 ###  Настроите ISIS в Underlay сети, для IP связанности между всеми сетевыми устройствами.
 - конфигурация isis spine1:
 ```
